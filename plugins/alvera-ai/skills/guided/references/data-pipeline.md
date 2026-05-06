@@ -111,6 +111,47 @@ Plain-language proposal, one bullet per column:
 - **State `privacy_requirement` is locked at creation.**
 - **State `is_unique` is composite** when multiple columns have it.
 
+**Before creating, always present the full schema to the user and ask them
+to confirm.** Format as a clear table showing every column's name, type,
+required status, privacy requirement, and constraints.
+
+### Conservative `is_required`
+
+Default every column to `is_required: false` unless there is a clear,
+domain-specific reason it must always be present (e.g. a primary key that
+the system cannot function without). When in doubt, leave it optional —
+missing data is fixable, but a required field that blocks ingestion of
+real-world messy data is not.
+
+### Aggressive PII classification (healthcare / finance)
+
+In healthcare or finance datalakes (`data_domain` = `healthcare`,
+`core_banking`, `payment_risk`, `accounts_receivable`), treat identifier
+columns aggressively:
+
+- **Patient ID, MRN, appointment ID, claim ID, member ID, account number,
+  policy number** — all `privacy_requirement: tokenize` (these are PII
+  under HIPAA / financial regulations even though they look like "just an ID").
+- Names, DOB, phone, email, SSN, address — `tokenize` or `redact_only`.
+- Truly non-sensitive columns (e.g. `appointment_type`, `status`) — `none`.
+
+**Always ask the user to double-check the PII / regulated classification
+before proceeding.** Over-classifying is safer than under-classifying —
+`privacy_requirement` is locked at creation and cannot be changed later.
+
+Example confirmation prompt:
+
+> "Here's the table I'll create — **please double-check the PII column**:
+>
+> | Column | Type | Required | PII | Unique |
+> |--------|------|----------|-----|--------|
+> | patient_id | string | no | **tokenize** | yes |
+> | first_name | string | no | **tokenize** | no |
+> | dob | date | no | **tokenize** | no |
+> | appt_status | string | no | none | no |
+>
+> Anything to adjust? (y/n)"
+
 Confirm with y/n. Only show JSON on explicit request.
 
 ## Step 4: Create table

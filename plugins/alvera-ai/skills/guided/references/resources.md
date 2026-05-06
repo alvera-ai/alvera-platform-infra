@@ -237,9 +237,16 @@ Per column:
 | `type`                | no       | `string`  | `string \| integer \| float \| boolean \| date \| datetime \| time` |
 | `description`         | **yes**  | —         | One-liner                                |
 | `privacy_requirement` | no       | `none`    | `none \| tokenize \| redact_only` — **locked at creation** |
-| `is_required`         | no       | `false`   |                                          |
+| `is_required`         | no       | `false`   | **Be conservative** — default to `false` unless truly mandatory |
 | `is_unique`           | no       | `false`   | **Composite** when multiple columns set  |
 | `is_array`            | no       | `false`   | NDJSON only                              |
+
+**Schema confirmation gate:** Before creating any generic table, present the
+full column list (name, type, required, privacy, unique) to the user and ask
+them to confirm. In healthcare/finance datalakes, classify identifier columns
+(patient ID, MRN, appointment ID, claim ID, etc.) as `tokenize` — they are
+PII even though they look like plain IDs. Ask the user to double-check PII
+classification since `privacy_requirement` is locked at creation.
 
 ### Example create body
 
