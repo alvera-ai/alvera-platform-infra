@@ -270,6 +270,68 @@ def count_questions(messages):
     return questions
 
 
+def extract_full_conversation(events):
+    """Extract complete conversation as structured JSON — no truncation."""
+    conversation = []
+    for line_num, msg in events:
+        if "message" not in msg or not isinstance(msg["message"], dict):
+            if msg.get("type") == "aiTitle":
+                conversation.append({
+                    "line": line_num,
+                    "role": "system",
+                    "type": "title",
+                    "content": msg.get("aiTitle", "")
+                })
+            continue
+
+        m = msg["message"]
+        role = m.get("role", "")
+        content = m.get("content", "")
+
+        if role == "user":
+            entry = {"line": line_num, "role": "user", "type": "message", "blocks": []}
+            if isinstance(content, list):
+                for b in content:
+                    if isinstance(b, dict):
+                        if b.get("type") == "text":
+                            entry["blocks"].append({"type": "text", "text": b["text"]})
+                        elif b.get("type") == "tool_result":
+                            entry["blocks"].append({
+                                "type": "tool_result",
+                                "tool_use_id": b.get("tool_use_id", ""),
+                                "content": b.get("content", "")[:2000] if isinstance(b.get("content"), str) else str(b.get("content", ""))[:2000]
+                            })
+                        else:
+                            entry["blocks"].append(b)
+            elif isinstance(content, str):
+                entry["blocks"].append({"type": "text", "text": content})
+            conversation.append(entry)
+
+        elif role == "assistant":
+            entry = {"line": line_num, "role": "assistant", "type": "message", "blocks": []}
+            if isinstance(content, list):
+                for b in content:
+                    if not isinstance(b, dict):
+                        continue
+                    bt = b.get("type", "")
+                    if bt == "text":
+                        entry["blocks"].append({"type": "text", "text": b.get("text", "")})
+                    elif bt == "tool_use":
+                        entry["blocks"].append({
+                            "type": "tool_use",
+                            "name": b.get("name", ""),
+                            "id": b.get("id", ""),
+                            "input": b.get("input", {})
+                        })
+                    elif bt == "thinking":
+                        entry["blocks"].append({"type": "thinking", "text": b.get("thinking", b.get("text", ""))})
+                    else:
+                        entry["blocks"].append(b)
+            conversation.append(entry)
+
+    return conversation
+
+
 def generate_report(claude_dir, session_id, meta, messages, tasks, history, output_path):
     tool_counts, bash_cats = analyze_tool_calls(messages)
     violations = detect_boundary_violations(messages)
@@ -434,6 +496,32 @@ def main():
 
     report = generate_report(claude_dir, session_id, meta, messages, tasks, history, args.output)
 
+    # Write structured JSON conversation
+    convo_path = args.output.replace(".md", "-conversation.json")
+    full_convo = extract_full_conversation(events)
+    convo_output = {
+        "session_id": session_id,
+        "meta": {
+            "version": meta.get("version", "?"),
+            "pid": meta.get("pid"),
+            "cwd": meta.get("cwd", "?"),
+            "started": meta.get("procStart"),
+            "status": meta.get("status")
+        },
+        "stats": {
+            "total_messages": len(full_convo),
+            "user_messages": sum(1 for m in full_convo if m["role"] == "user"),
+            "assistant_messages": sum(1 for m in full_convo if m["role"] == "assistant"),
+            "tool_calls": sum(
+                1 for m in full_convo if m["role"] == "assistant"
+                for b in m.get("blocks", []) if isinstance(b, dict) and b.get("type") == "tool_use"
+            )
+        },
+        "conversation": full_convo
+    }
+    with open(convo_path, "w") as f:
+        json.dump(convo_output, f, indent=2, default=str)
+
     # Print summary to stdout
     tool_calls = [m for m in messages if m["type"] == "tool_call"]
     violations = detect_boundary_violations(messages)
@@ -448,6 +536,7 @@ def main():
     print(f"Inefficiency flags: {len(inefficiencies)}")
     print(f"Tasks: {len(tasks)} ({sum(1 for t in tasks if t.get('status')=='completed')} completed)")
     print(f"\nFull report: {args.output}")
+    print(f"Structured conversation: {convo_path}")
 
 
 if __name__ == "__main__":
