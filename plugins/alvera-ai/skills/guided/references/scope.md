@@ -28,6 +28,10 @@
   `connected-apps update-message-tracking` are runtime page rendering,
   not provisioning. CRUD + `sync-routes` on connected app resources are in
   scope; page-level endpoints are not.
+- Connected app **UI/hosting** — this skill creates the connected app
+  *resource* on Alvera (registers URL, syncs routes), but does NOT build
+  or host the actual frontend. Frontend app development is a separate
+  skill/concern. This skill is data pipeline + backend infrastructure.
 - **Invite / team management** — team invites are a domain-specific
   concern handled by the `/healthcare` skill's phase walk, not a general
   provisioning operation. Not available via `/guided`.

@@ -255,6 +255,16 @@ to discover them — the API is authoritative.
 {{ phone }}
 ```
 
+**SMS `to` field requires E.164 format** (`+15551234567`). If the phone
+from MDM doesn't include the country code, normalize in the template:
+
+```liquid
+{% assign phone = mdm_output.regulated_patient.telecom
+  | where: "system", "phone" | map: "value" | first %}
+{% assign clean = phone | strip | remove: "-" | remove: "(" | remove: ")" | remove: " " %}
+{% if clean.size == 10 %}+1{{ clean }}{% else %}{{ clean }}{% endif %}
+```
+
 ### Common patterns
 
 **Date formatting:**
@@ -266,6 +276,13 @@ to discover them — the API is authoritative.
 ```liquid
 {{ appointment.start | date: "%Y-%m-%d %H:%M:%S", "add", "3 hours", timezone }}
 {{ appointment.end_time | date: "%Y-%m-%d %H:%M:%S", "add", "7 days", timezone }}
+```
+
+**Date arithmetic — use days, not months.** `"12 months"` silently returns
+empty. Use `"365 days"` instead. Valid units: `hours`, `days`. Not `months`.
+
+```liquid
+{{ appointment.start | date: "%Y-%m-%d", "subtract", "365 days" }}
 ```
 
 **Age calculation:**
