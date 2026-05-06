@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.4.0](https://github.com/alvera-ai/alvera-agent/compare/v0.3.0...v0.4.0) (2026-05-06)
+
+
+### Features
+
+* add alvera-ai plugin with top-down outcome-driven guided skill ([8bc8080](https://github.com/alvera-ai/alvera-agent/commit/8bc80802ee6e99867507a66877d9a36d3b2b65fc))
+* add reference files — outcomes, resources, data-pipeline, workflows, query, neon, guardrails, scope, cli, receipt, transcripts ([a902600](https://github.com/alvera-ai/alvera-agent/commit/a90260090741ee79ba43a2c1d73741ecfb6e8e0f))
+* add structured JSON output and session query scripts ([89ef35d](https://github.com/alvera-ai/alvera-agent/commit/89ef35dc03cae8a9db879f4359d2e17fd3add176))
+* overhaul guided skill — planning-first flow, SDK search, init commands ([1d7fa61](https://github.com/alvera-ai/alvera-agent/commit/1d7fa61b9f353f6d88c52e799b5383c0982330bd))
+
+
+### Bug Fixes
+
+* bootstrap auto-detects state before asking — zero prompts for returning users ([5666e0a](https://github.com/alvera-ai/alvera-agent/commit/5666e0abd0e3a6a63a105d58a6ce5cb7a949235b))
+* critical skill doc issues — arrow notation, password echo, MDM scope, script paths ([052ee1b](https://github.com/alvera-ai/alvera-agent/commit/052ee1b6ba068b5b92288170da2a51a03095cd81))
+* high-priority skill doc issues — Template B, slug vs ID, field counts, modes ([597e746](https://github.com/alvera-ai/alvera-agent/commit/597e74622a90e92b40107adadc8028285fa359fa))
+* medium skill doc issues — proactive stance, error recovery, context switching ([90cc123](https://github.com/alvera-ai/alvera-agent/commit/90cc12373882295b12b992d790ccaed2766e2484))
+* sandbox post-mortem — boundaries, body examples, analyzer script ([f1f035f](https://github.com/alvera-ai/alvera-agent/commit/f1f035f44c66d44339ec5849aef9afff90ba8853))
+
 ## [0.3.0](https://github.com/alvera-ai/alvera-agent/compare/v0.2.0...v0.3.0) (2026-04-30)
 
 
